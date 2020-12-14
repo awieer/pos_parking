@@ -1,39 +1,34 @@
 class KompaunResponse {
   bool success;
   String message;
-  Params params;
   List<KompaunData> data;
-  bool responseFromMpk;
 
-  KompaunResponse(
-      this.success, this.message, this.params, this.data, this.responseFromMpk);
+  KompaunResponse(this.success, this.message, this.data);
 
   KompaunResponse.fromJson(Map<String, dynamic> json)
       : success = json["success"],
         message = json["message"],
-        params = Params.fromJson(json["params"]),
         data =
-            (json["data"] as List).map((i) => KompaunData.fromJson(i)).toList(),
-        responseFromMpk = json["responseFromMpk"];
+            (json["data"] as List).map((i) => KompaunData.fromJson(i)).toList();
 }
 
-class Params {
-  String searchvalue;
-  String councilid;
-  int searchtype;
-  String refsource;
-  String secretkey;
+// class Params {
+//   String searchvalue;
+//   String councilid;
+//   int searchtype;
+//   String refsource;
+//   String secretkey;
 
-  Params(this.searchvalue, this.councilid, this.searchtype, this.refsource,
-      this.secretkey);
+//   Params(this.searchvalue, this.councilid, this.searchtype, this.refsource,
+//       this.secretkey);
 
-  Params.fromJson(Map<String, dynamic> json)
-      : searchvalue = json["searchvalue"],
-        councilid = json["councilid"],
-        searchtype = json["searchtype"],
-        refsource = json["refsource"],
-        secretkey = json["secretkey"];
-}
+//   Params.fromJson(Map<String, dynamic> json)
+//       : searchvalue = json["searchvalue"],
+//         councilid = json["councilid"],
+//         searchtype = json["searchtype"],
+//         refsource = json["refsource"],
+//         secretkey = json["secretkey"];
+// }
 
 class KompaunData {
   String status;
@@ -63,5 +58,5 @@ class KompaunData {
         violationLocation = json["violation_location"],
         violationTimestamp = json["violation_timestamp"],
         violationType = json["violation_type"],
-        compoundAmount = json["compound_amount"];
+        compoundAmount = int.parse(json["compound_amount"].toString());
 }

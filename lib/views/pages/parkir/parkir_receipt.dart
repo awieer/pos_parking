@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pos_parking/model/pay_parkir_response.dart';
+import 'package:pos_parking/views/pages/home/homepage.dart';
 import 'package:pos_parking/views/widget/dotted_seperator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
 import '../../../config/theme.dart' as Styles;
 
@@ -19,11 +21,34 @@ class ParkirReceipt extends StatefulWidget {
 
 class _ParkirReceiptState extends State<ParkirReceipt> {
   static const platform = const MethodChannel(CHANNEL);
+  String selectedMajlis = "MPK";
+  bool selesaiBtn = false;
 
   @override
   void initState() {
+    _getMajlis();
     super.initState();
     platform.setMethodCallHandler(_handleMethod);
+  }
+
+  _getMajlis() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedMajlis = prefs.getString("majlis");
+    });
+  }
+
+  String majlisSelected(selectedMajlis) {
+    String assetsImg;
+    if (selectedMajlis == "MPK") {
+      assetsImg = "assets/imgs/logo.png";
+    } else if (selectedMajlis == "MDCH") {
+      assetsImg = "assets/imgs/mdch.png";
+    } else if (selectedMajlis == "MPB") {
+      assetsImg = "assets/imgs/mpb.png";
+    }
+
+    return assetsImg;
   }
 
   @override
@@ -56,7 +81,7 @@ class _ParkirReceiptState extends State<ParkirReceipt> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Image.asset(
-                    "assets/imgs/logo.png",
+                    majlisSelected(selectedMajlis),
                     width: 100,
                   ),
                   SizedBox(height: 16),
@@ -151,27 +176,50 @@ class _ParkirReceiptState extends State<ParkirReceipt> {
       )),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Container(
-          height: 54,
-          child: RaisedButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5.0),
-            ),
-            color: Styles.Colors.primaryColor,
-            textColor: Colors.white,
-            elevation: 0,
-            onPressed: () {
-              printReceipt();
-            },
-            child: Text(
-              "CETAK",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
+        child: selesaiBtn
+            ? Container(
+                height: 54,
+                child: RaisedButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  color: Styles.Colors.primaryColor,
+                  textColor: Colors.white,
+                  elevation: 0,
+                  onPressed: () {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (context) => HomePage()));
+                  },
+                  child: Text(
+                    "SELESAI",
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+            : Container(
+                height: 54,
+                child: RaisedButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  color: Styles.Colors.primaryColor,
+                  textColor: Colors.white,
+                  elevation: 0,
+                  onPressed: () {
+                    printReceipt();
+                  },
+                  child: Text(
+                    "CETAK",
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -192,15 +240,10 @@ class _ParkirReceiptState extends State<ParkirReceipt> {
     print("callback: ${call.arguments}");
     switch (call.method) {
       case "message":
-        _onSuccess(call);
+        setState(() {
+          selesaiBtn = true;
+        });
         return new Future.value("");
-    }
-  }
-
-  _onSuccess(MethodCall call) {
-    if (call.arguments == "Success") {
-      Toast.show("Printing receipt..", context,
-          duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
     }
   }
 }

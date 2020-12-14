@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:pos_parking/views/pages/home/homepage.dart';
 import 'package:pos_parking/views/widget/dotted_seperator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
@@ -26,12 +27,35 @@ class KompaunReceipt extends StatefulWidget {
 class _KompaunReceiptState extends State<KompaunReceipt> {
   static const platform = const MethodChannel(CHANNEL);
   String now;
+  String selectedMajlis = "MPK";
+  bool selesaiBtn = false;
 
   @override
   void initState() {
     super.initState();
     platform.setMethodCallHandler(_handleMethod);
     now = DateTime.now().toString();
+    _getMajlis();
+  }
+
+  _getMajlis() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedMajlis = prefs.getString("majlis");
+    });
+  }
+
+  String majlisSelected(selectedMajlis) {
+    String assetsImg;
+    if (selectedMajlis == "MPK") {
+      assetsImg = "assets/imgs/logo.png";
+    } else if (selectedMajlis == "MDCH") {
+      assetsImg = "assets/imgs/mdch.png";
+    } else if (selectedMajlis == "MPB") {
+      assetsImg = "assets/imgs/mpb.png";
+    }
+
+    return assetsImg;
   }
 
   formatDate(date) {
@@ -70,7 +94,7 @@ class _KompaunReceiptState extends State<KompaunReceipt> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Image.asset(
-                    "assets/imgs/logo.png",
+                    majlisSelected(selectedMajlis),
                     width: 100,
                   ),
                   SizedBox(height: 16),
@@ -128,7 +152,7 @@ class _KompaunReceiptState extends State<KompaunReceipt> {
                       DottedSeparator(),
                       SizedBox(height: 16),
                       Container(
-                        height: widget.refNo.length.toDouble() * 22,
+                        height: widget.refNo.length.toDouble() * 25,
                         child: ListView.builder(
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: widget.refNo.length,
@@ -195,27 +219,50 @@ class _KompaunReceiptState extends State<KompaunReceipt> {
       )),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Container(
-          height: 54,
-          child: RaisedButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5.0),
-            ),
-            color: Styles.Colors.primaryColor,
-            textColor: Colors.white,
-            elevation: 0,
-            onPressed: () {
-              printReceipt();
-            },
-            child: Text(
-              "CETAK",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
+        child: selesaiBtn
+            ? Container(
+                height: 54,
+                child: RaisedButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  color: Styles.Colors.primaryColor,
+                  textColor: Colors.white,
+                  elevation: 0,
+                  onPressed: () {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (context) => HomePage()));
+                  },
+                  child: Text(
+                    "SELESAI",
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+            : Container(
+                height: 54,
+                child: RaisedButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  color: Styles.Colors.primaryColor,
+                  textColor: Colors.white,
+                  elevation: 0,
+                  onPressed: () {
+                    printReceipt();
+                  },
+                  child: Text(
+                    "CETAK",
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -236,17 +283,13 @@ class _KompaunReceiptState extends State<KompaunReceipt> {
 
   Future<dynamic> _handleMethod(MethodCall call) async {
     print("callback: ${call.arguments}");
+    print("method: ${call.method}");
     switch (call.method) {
       case "message":
-        _onSuccess(call);
+        setState(() {
+          selesaiBtn = true;
+        });
         return new Future.value("");
-    }
-  }
-
-  _onSuccess(MethodCall call) {
-    if (call.arguments == "Success") {
-      Toast.show("Printing receipt..", context,
-          duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
     }
   }
 }

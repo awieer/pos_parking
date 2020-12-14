@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_parking/bloc/coupon_bloc.dart';
+import 'package:pos_parking/model/coupon_pass_model.dart';
+import 'package:pos_parking/repository/coupon_repo.dart';
 import 'package:pos_parking/views/pages/kompaun/kompoun_receipt.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/theme.dart' as Styles;
 
 class KompounBayaran extends StatefulWidget {
@@ -33,6 +38,7 @@ class _KompounBayaranState extends State<KompounBayaran> {
     kuantitiController.text = widget.kuantiti.toString();
     amountController.text = "RM " + (widget.amount / 100).toString() + "0";
     jumlahController.text = "RM " + (widget.amount / 100).toString() + "0";
+    newAmount = widget.amount.toDouble();
   }
 
   @override
@@ -418,18 +424,28 @@ class _KompounBayaranState extends State<KompounBayaran> {
   }
 
   _diskaunModal(context) {
-    showModalBottomSheet(
+    var couponSelected = showModalBottomSheet(
         context: context,
         builder: (BuildContext bc) {
-          return Container(
-            height: 200,
-            child: new Wrap(
-              children: <Widget>[
-                _diskaunItem(context, "MDK50", "100"),
-              ],
-            ),
+          return BlocProvider<CouponBloc>(
+            create: (context) => CouponBloc(CouponPassRepository()),
+            child: CouponList(),
           );
         });
+    couponSelected.then((value) {
+      CouponPass coupon = value;
+      setState(() {
+        showDiskaun = true;
+        diskaun = coupon.code;
+        penguranganController.text = coupon.reduction;
+        amountController.text = "RM " +
+            ((widget.amount / 100) - double.parse(coupon.reduction))
+                .toString() +
+            "0";
+        newAmount =
+            (((widget.amount / 100) - double.parse(coupon.reduction)) * 100);
+      });
+    });
   }
 
   Widget _diskaunItem(context, code, val) {
@@ -476,6 +492,77 @@ class _KompounBayaranState extends State<KompounBayaran> {
               ],
             ),
           )),
+    );
+  }
+}
+
+class CouponList extends StatefulWidget {
+  @override
+  _CouponListState createState() => _CouponListState();
+}
+
+class _CouponListState extends State<CouponList> {
+  CouponBloc couponBloc;
+
+  @override
+  void initState() {
+    couponBloc = BlocProvider.of<CouponBloc>(context);
+    getPass();
+    super.initState();
+  }
+
+  getPass() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token");
+    couponBloc.add(GetCoupons(token));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<CouponBloc, CouponState>(
+      builder: (context, state) {
+        if (state is CouponLoaded) {
+          return _couponList(context, state.getCouponPass);
+        } else if (state is CouponFailed) {
+          return Center(child: Text(state.errorMsg));
+        }
+        return Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  Widget _couponList(context, CouponModel data) {
+    return Container(
+      padding: EdgeInsets.only(top: 32, bottom: 16),
+      height: ((60 * data.data.length) + 32).toDouble(),
+      child: ListView.builder(
+        itemCount: data.data.length,
+        itemBuilder: (context, index) {
+          return InkWell(
+            onTap: () {
+              Navigator.pop(context, data.data[index]);
+            },
+            child: Container(
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text("${data.data[index].code} ",
+                        style: TextStyle(
+                            color: Styles.Colors.textBlackColor,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w400)),
+                    Text(
+                      "(RM${data.data[index].reduction})",
+                      style: TextStyle(
+                          color: Styles.Colors.primaryColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w400),
+                    ),
+                  ]),
+            ),
+          );
+        },
+      ),
     );
   }
 }

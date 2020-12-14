@@ -126,6 +126,64 @@ class _ParkirProcessState extends State<ParkirProcess> {
     );
   }
 
+  void _parkingFailed(msg) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(content: Builder(builder: (context) {
+          return Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+              Text("Error",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  )),
+              SizedBox(height: 20),
+              Text(
+                "$msg",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
+                      height: 54,
+                      child: RaisedButton(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                        ),
+                        color: Styles.Colors.primaryColor,
+                        textColor: Colors.white,
+                        elevation: 0,
+                        onPressed: () {
+                          int count = 0;
+                          Navigator.of(context).popUntil((_) => count++ >= 2);
+                        },
+                        child: Text(
+                          "OKAY",
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ]),
+          );
+        }));
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<ParkirBloc, ParkirState>(
@@ -133,7 +191,8 @@ class _ParkirProcessState extends State<ParkirProcess> {
         if (state is ParkirIsSuccess) {
           _finishPayment(state.getResponse);
         } else if (state is ParkirIsNotSuccess) {
-          _parkingNotSuccess(widget.noPlate);
+          // _parkingNotSuccess(widget.noPlate);
+          _parkingFailed(state.message);
         }
         return Container();
       },

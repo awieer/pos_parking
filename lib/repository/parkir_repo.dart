@@ -26,6 +26,7 @@ class ParkirRepo {
           }));
       if (response.statusCode == 200) {
         AddVehicleResponse data = AddVehicleResponse.fromJson(response.data);
+        print(data.data.id);
         return await createParkingPass(token, data.data.id, passId);
       }
     } on http_dio.DioError catch (error) {
@@ -88,7 +89,7 @@ class ParkirRepo {
       }
     } on http_dio.DioError catch (error) {
       if (error.type == http_dio.DioErrorType.RESPONSE) {
-        throw Exception();
+        throw Exception("${response.data}");
       }
     }
   }

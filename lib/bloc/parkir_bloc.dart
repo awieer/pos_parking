@@ -40,7 +40,12 @@ class ParkirIsSuccess extends ParkirState {
   List<Object> get props => [];
 }
 
-class ParkirIsNotSuccess extends ParkirState {}
+class ParkirIsNotSuccess extends ParkirState {
+  final message;
+  ParkirIsNotSuccess(this.message);
+  @override
+  List<Object> get props => [message];
+}
 
 //Bloc
 class ParkirBloc extends Bloc<ParkirEvent, ParkirState> {
@@ -60,9 +65,9 @@ class ParkirBloc extends Bloc<ParkirEvent, ParkirState> {
         PayParkirResponse parkir = await parkirRepo.addPlate(
             event._noPlate, event._token, event._parkingPass);
         yield ParkirIsSuccess(parkir);
-      } catch (_) {
+      } catch (e) {
         print("error catch");
-        yield ParkirIsNotSuccess();
+        yield ParkirIsNotSuccess(e.toString());
       }
     }
   }

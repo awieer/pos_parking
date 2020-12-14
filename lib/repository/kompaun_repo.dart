@@ -43,27 +43,33 @@ class KompaunRepository {
 
   Future<KompaunPelbagaiResponse> findKompaunPelbagaiList(data, token) async {
     String selectedMajlis = "MPK";
+    String queryType = "3";
     String majlis;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     selectedMajlis = prefs.getString("majlis");
     if (selectedMajlis == "MDCH") {
       majlis = "mdch2";
+      queryType = "1";
     } else if (selectedMajlis == "MPK") {
       majlis = "mpk";
+      queryType = "3";
     } else if (selectedMajlis == "MPB") {
       majlis = "mpb";
+      queryType = "1";
     }
     print(token);
     final result = await http.get(
         "$apiUrl/api/feeders/$majlis/compound/other?query=" +
             data +
-            "&query_type=3",
+            "&query_type=" +
+            queryType,
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer " + token
         });
 
     if (result.statusCode != 200) {
+      print("${result.body}");
       throw Exception();
     } else {
       print("${result.body}");

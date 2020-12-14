@@ -31,7 +31,7 @@ class Data {
 
 class ParkingPassOption {
   String name;
-  double price;
+  dynamic price;
 
   ParkingPassOption(this.name, this.price);
 
